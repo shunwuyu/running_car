@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10.0267px;">
+<head>
+  <meta charset="UTF-8">
+  <title>webapp抽奖</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="https://static.udache.com/gulfstream/webapp/css/didi.new.css">
+  <link rel="stylesheet" href="https://static.udache.com/activity/running-car/css/index.css">
+</head>
+<body>
+  <div class="main">
+        <div class="turnplate" style="left: 7.5px; width: 361px;">
+            <img src="https://static.udache.com/activity/running-car/images/pan.png">
+            <img class="light d0" src="https://static.udache.com/activity/running-car/images/light.png">
+            <img id="car" src="https://static.udache.com/activity/running-car/images/car.png">
+            <canvas id="wheelcanvas" width="361" height="361"></canvas>
+        </div>
+        <img class="text" src="https://static.udache.com/activity/running-car/images/text.png">
+        <div class="fingerprint"></div>
+        <img class="info" src="https://static.udache.com/activity/running-car/images/text11.png">
+    </div>
+    <script src="https://static.udache.com/gulfstream/webapp/js/didi.new.js"></script>
+    <script src="./activity.min.js"></script>
+    <script src="https://static.udache.com/activity/running-car/js/awardRotate.js"></script>
+    <script src="https://static.udache.com/activity/running-car/js/Easing.min.js"></script>
+    <script>
+    (function($,window){
+      var sourceid = didi.query('sourceid') || 'default';
+      var day = new Date().getDate();
+      var count = didi.getData(day + '_' + sourceid + '_count');
+      count = parseInt(count);
+      var award, longTapTimeout, isLongTap, prizeUrl, pre = { x: 0, y: 0 };
+      var height = $('.turnplate').height();
+      var panImgs = {
+        'qq': 'images/inner.png',
+        'zhifubao': 'images/inner_ali.png',
+        'weixin': 'images/inner.png',
+        'default': 'images/inner.png'
+      };
+      function renderInit() {
+        drawRouletteWheel();
+      }
+
+      function drawRouletteWheel(){
+        var canvas = document.getElementById('wheelcanvas');
+        if(canvas.getContext) {
+          var arc = Math.PI/(9/2);
+          var ctx = canvas.getContext('2d');
+          canvas.width = height,canvas.height=height;
+          ctx.clearRect(0,0,height,height);
+          var image = new Image();
+          image.src = panImgs[sourceid];
+          image.onload = function(){
+            ctx.drawImage(image,height * 0.1,height * 0.1,height * 0.8, height * 0.8)
+          }
+        }
+      }
+      renderInit();
+
+      var $finger = $('.fingerprint'),
+        $cover = $('.cover'),
+        $canvas = $('#wheelcanvas'),
+        $car = $('#car'),
+        $light = $('.light');
+      BindEvents();
+      function BindEvents() {
+        $finger.on('touchstart', function(event) {
+            // alert('fdf');
+            event.preventDefault();
+            pre.x = event.touches[0].pageX;
+            pre.y = event.touches[0].pageY;
+            // luckyDraw();
+            longTapTimeout = setTimeout(function() {
+                startRotate();
+                isLongTap = true;
+            }, 700);
+        });
+        $finger.on('touchend', function(event) {
+           clearTimeout(longTapTimeout);
+           if (isLongTap) {
+               longTapCallback(event);
+           }
+        });
+      }
+
+      function startRotate() {
+        $canvas.stopRotate();
+        $car.stopRotate();
+        $car.rotate({
+            angle: 0,
+            animateTo: -10800,
+            duration: 30000,
+            easing: Easing.easeOutQuad,
+            callback: function() {
+                turnplate.bRotate = !turnplate.bRotate;
+            }
+        });
+        $canvas.rotate({
+            angle: 0,
+            animateTo: 10800,
+            duration: 30000,
+            easing: Easing.easeOutQuad,
+            callback: function() {}
+        });
+      }
+      function longTapCallback(evt) {
+        evt.preventDefault();
+        rotateFn(award);
+      }
+
+
+      var rotateFn = function(item) {
+        count = didi.getData(day + '_' + sourceid + '_count');
+        count = parseInt(count);
+        // console.log(count);
+        item = count > 3 ? 2 : item ? item : 2;
+        // console.log(item);
+        var angles = item * 40;
+        $canvas.stopRotate();
+        $car.stopRotate();
+        $car.rotate({
+            angle: 0,
+            animateTo: -(1080 + 200 - item * 40 - angles),
+            duration: 3000,
+            easing: Easing.easeOutQuad,
+            callback: function() {
+                turnplate.bRotate = !turnplate.bRotate;
+                $light.show();
+                setTimeout(function() {
+                    if (award == 2 || award == 7) {
+                        $('.btn1').hide();
+                        $('.back').show();
+                    } else {
+                        $('.btn1').show();
+                        $('.back').hide();
+                    }
+                    $cover.show();
+                    if (count > 3) {
+                        $('#prizeImg').attr('src', 'images/no_chance.png');
+                        $('.btngroup').hide();
+                        $('.close').hide();
+                        return false;
+                    }
+                }, 750);
+            }
+        });
+        $light.rotate({
+            angle: 0,
+            animateTo: angles + 720 + (item - 1) * 40,
+            duration: 2000,
+            easing: Easing.easeOutQuad,
+            callback: function() {}
+        });
+        $canvas.rotate({
+            angle: 0,
+            animateTo: angles + 720,
+            duration: 2000,
+            easing: Easing.easeOutQuad,
+            callback: function() {}
+        });
+    };
+
+    })(Zepto,window)
+    </script>
+</body>
+</html>
